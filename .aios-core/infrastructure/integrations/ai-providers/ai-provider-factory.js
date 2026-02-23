@@ -14,6 +14,7 @@ const yaml = require('js-yaml');
 
 const { ClaudeProvider } = require('./claude-provider');
 const { GeminiProvider } = require('./gemini-provider');
+const { OpenAICompatibleProvider } = require('./openai-compatible-provider');
 
 /**
  * Cached provider instances (singleton pattern)
@@ -50,6 +51,13 @@ const DEFAULT_CONFIG = {
     previewFeatures: true,
     jsonOutput: false,
   },
+  openaiCompatible: {
+    baseURL: 'http://localhost:1234/v1',
+    apiKey: 'lm-studio',
+    model: 'qwen/qwen2.5-coder-14b',
+    timeout: 300000,
+    maxRetries: 3,
+  },
 };
 
 /**
@@ -79,6 +87,10 @@ function loadConfig(projectRoot = process.cwd()) {
       ai_providers: { ...DEFAULT_CONFIG.ai_providers, ...userConfig?.ai_providers },
       claude: { ...DEFAULT_CONFIG.claude, ...userConfig?.claude },
       gemini: { ...DEFAULT_CONFIG.gemini, ...userConfig?.gemini },
+      openaiCompatible: {
+        ...DEFAULT_CONFIG.openaiCompatible,
+        ...(userConfig?.openaiCompatible || userConfig?.openai_compatible),
+      },
     };
 
     return cachedConfig;
@@ -103,7 +115,15 @@ function getProvider(providerName, config = null) {
   }
 
   const fullConfig = loadConfig();
-  const providerConfig = config || fullConfig[providerName] || {};
+  const normalized = providerName.toLowerCase();
+  const providerConfig =
+    config ||
+    (normalized === 'openai-compatible' ||
+    normalized === 'openai_compatible' ||
+    normalized === 'openaicompatible' ||
+    normalized === 'local'
+      ? fullConfig.openaiCompatible || {}
+      : fullConfig[providerName] || {});
 
   let provider;
 
@@ -114,6 +134,13 @@ function getProvider(providerName, config = null) {
 
     case 'gemini':
       provider = new GeminiProvider(providerConfig);
+      break;
+
+    case 'openai-compatible':
+    case 'openai_compatible':
+    case 'openaicompatible':
+    case 'local':
+      provider = new OpenAICompatibleProvider(providerConfig);
       break;
 
     default:
@@ -213,7 +240,11 @@ async function executeWithFallback(prompt, options = {}) {
  * @returns {Promise<AIProvider[]>} Array of available providers
  */
 async function getAvailableProviders() {
-  const providers = [getProvider('claude'), getProvider('gemini')];
+  const providers = [
+    getProvider('claude'),
+    getProvider('gemini'),
+    getProvider('openai-compatible'),
+  ];
 
   const available = [];
   for (const provider of providers) {
@@ -232,7 +263,7 @@ async function getAvailableProviders() {
 async function getProvidersStatus() {
   const status = {};
 
-  for (const name of ['claude', 'gemini']) {
+  for (const name of ['claude', 'gemini', 'openai-compatible']) {
     const provider = getProvider(name);
     const isAvailable = await provider.checkAvailability();
 
@@ -282,4 +313,5 @@ module.exports = {
   // Classes for direct use
   ClaudeProvider,
   GeminiProvider,
+  OpenAICompatibleProvider,
 };

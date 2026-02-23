@@ -8,10 +8,10 @@
 # Provider Configuration
 ai_providers:
   # Primary provider - used by default
-  primary: claude        # Options: claude, gemini
+  primary: claude        # Options: claude, gemini, openai-compatible
 
   # Fallback provider - used when primary fails
-  fallback: gemini       # Options: claude, gemini, null (no fallback)
+  fallback: gemini       # Options: claude, gemini, openai-compatible, local, null (no fallback)
 
   # Task-based routing
   # Route specific task types to preferred providers
@@ -67,6 +67,23 @@ gemini:
 
   # Use JSON output format by default
   jsonOutput: false
+
+# OpenAI-Compatible Configuration (LM Studio, local gateways, etc.)
+openaiCompatible:
+  # Base URL without trailing slash (must expose /models and /chat/completions)
+  baseURL: http://localhost:1234/v1
+
+  # API key (LM Studio accepts any non-empty token)
+  apiKey: lm-studio
+
+  # Model identifier exposed by your server
+  model: qwen/qwen2.5-coder-14b
+
+  # Execution timeout (ms)
+  timeout: 300000
+
+  # Maximum retry attempts
+  maxRetries: 3
 
 # Model Switching (Story 16)
 # Automatic selection between Flash and Pro based on task complexity

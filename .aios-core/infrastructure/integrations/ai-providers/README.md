@@ -1,6 +1,6 @@
 # AI Providers
 
-Multi-provider AI integration for AIOS. Supports Claude Code and Gemini CLI with automatic fallback and task-based routing.
+Multi-provider AI integration for AIOS. Supports Claude Code, Gemini CLI, and OpenAI-compatible endpoints (e.g., LM Studio) with automatic fallback and task-based routing.
 
 ## Architecture
 
@@ -10,6 +10,7 @@ ai-providers/
 ├── claude-provider.js       # Claude Code implementation
 ├── gemini-provider.js       # Gemini CLI implementation
 ├── ai-provider-factory.js   # Factory with routing and fallback
+├── openai-compatible-provider.js # OpenAI-compatible HTTP provider
 └── index.js                 # Module exports
 ```
 
@@ -72,7 +73,7 @@ Create `.aios-ai-config.yaml` in project root:
 ```yaml
 ai_providers:
   primary: claude
-  fallback: gemini
+  fallback: openai-compatible
   routing:
     simple_tasks: gemini
     complex_tasks: claude
@@ -84,6 +85,11 @@ claude:
 gemini:
   model: gemini-2.0-flash
   previewFeatures: true
+
+openaiCompatible:
+  baseURL: http://localhost:1234/v1
+  apiKey: lm-studio
+  model: qwen/qwen2.5-coder-14b
 ```
 
 ## Provider Comparison
